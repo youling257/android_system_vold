@@ -10,6 +10,7 @@ common_src_files := \
 	fs/Exfat.cpp \
 	fs/Ext4.cpp \
 	fs/F2fs.cpp \
+	fs/Iso9660.cpp \
 	fs/Ntfs.cpp \
 	fs/Vfat.cpp \
 	Loop.cpp \
