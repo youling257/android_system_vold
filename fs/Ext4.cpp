@@ -140,7 +140,7 @@ status_t Mount(const std::string& source, const std::string& target, bool ro,
 
     std::string data(opts);
 
-    if (portable) {
+    if (portable && is_selinux_enabled() > 0) {
         if (!data.empty()) {
             data += ",";
         }
