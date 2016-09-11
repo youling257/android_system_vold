@@ -37,7 +37,11 @@ namespace f2fs {
 static const char* kMkfsPath = "/sbin/mkfs.f2fs";
 static const char* kFsckPath = "/sbin/fsck.f2fs";
 #else
+#ifdef CM_BUILD
 static const char* kMkfsPath = "/system/bin/mkfs.f2fs";
+#else
+static const char* kMkfsPath = "/system/bin/make_f2fs";
+#endif
 static const char* kFsckPath = "/system/bin/fsck.f2fs";
 #endif
 
@@ -60,7 +64,7 @@ status_t Mount(const std::string& source, const std::string& target,
         const std::string& opts /* = "" */, bool trusted, bool portable) {
     std::string data(opts);
 
-    if (portable) {
+    if (portable && is_selinux_enabled() > 0) {
         if (!data.empty()) {
             data += ",";
         }
