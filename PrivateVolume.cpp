@@ -45,7 +45,7 @@ static const unsigned int kMajorBlockMmc = 179;
 
 PrivateVolume::PrivateVolume(dev_t device, const std::string& keyRaw) :
         VolumeBase(Type::kPrivate), mRawDevice(device), mKeyRaw(keyRaw) {
-    setId(StringPrintf("private:%u,%u", major(device), minor(device)));
+    setId(StringPrintf("private:%u_%u", major(device), minor(device)));
     mRawDevPath = StringPrintf("/dev/block/vold/%s", getId().c_str());
 }
 
@@ -105,7 +105,7 @@ status_t PrivateVolume::doMount() {
     }
 
     if (mFsType == "ext4") {
-        int res = ext4::Check(mDmDevPath, mPath);
+        int res = ext4::Check(mDmDevPath, mPath, true);
         if (res == 0 || res == 1) {
             LOG(DEBUG) << getId() << " passed filesystem check";
         } else {
@@ -113,13 +113,13 @@ status_t PrivateVolume::doMount() {
             return -EIO;
         }
 
-        if (ext4::Mount(mDmDevPath, mPath, false, false, true)) {
+        if (ext4::Mount(mDmDevPath, mPath, false, false, true, "", true)) {
             PLOG(ERROR) << getId() << " failed to mount";
             return -EIO;
         }
 
     } else if (mFsType == "f2fs") {
-        int res = f2fs::Check(mDmDevPath);
+        int res = f2fs::Check(mDmDevPath, true);
         if (res == 0) {
             LOG(DEBUG) << getId() << " passed filesystem check";
         } else {
@@ -127,7 +127,7 @@ status_t PrivateVolume::doMount() {
             return -EIO;
         }
 
-        if (f2fs::Mount(mDmDevPath, mPath)) {
+        if (f2fs::Mount(mDmDevPath, mPath, "", true)) {
             PLOG(ERROR) << getId() << " failed to mount";
             return -EIO;
         }
@@ -137,23 +137,7 @@ status_t PrivateVolume::doMount() {
         return -EIO;
     }
 
-    LOG(VERBOSE) << "Starting restorecon of " << mPath;
-
-    // TODO: find a cleaner way of waiting for restorecon to finish
-    property_set("selinux.restorecon_recursive", "");
-    property_set("selinux.restorecon_recursive", mPath.c_str());
-
-    char value[PROPERTY_VALUE_MAX];
-    while (true) {
-        property_get("selinux.restorecon_recursive", value, "");
-        if (strcmp(mPath.c_str(), value) == 0) {
-            break;
-        }
-        sleep(1);
-        LOG(VERBOSE) << "Waiting for restorecon...";
-    }
-
-    LOG(VERBOSE) << "Finished restorecon of " << mPath;
+    RestoreconRecursive(mPath);
 
     // Verify that common directories are ready to roll
     if (PrepareDir(mPath + "/app", 0771, AID_SYSTEM, AID_SYSTEM) ||
@@ -178,7 +162,7 @@ status_t PrivateVolume::doMount() {
     return OK;
 }
 
-status_t PrivateVolume::doUnmount() {
+status_t PrivateVolume::doUnmount(bool detach /* = false */) {
     ForceUnmount(mPath);
 
     if (TEMP_FAILURE_RETRY(rmdir(mPath.c_str()))) {

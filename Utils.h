@@ -50,7 +50,7 @@ status_t DestroyDeviceNode(const std::string& path);
 status_t PrepareDir(const std::string& path, mode_t mode, uid_t uid, gid_t gid);
 
 /* Really unmounts the path, killing active processes along the way */
-status_t ForceUnmount(const std::string& path);
+status_t ForceUnmount(const std::string& path, bool detach = false);
 
 /* Kills any processes using given path */
 status_t KillProcessesUsingPath(const std::string& path);
@@ -113,6 +113,8 @@ std::string BuildDataUserDePath(const char* volumeUuid, userid_t userid);
 dev_t GetDevice(const std::string& path);
 
 std::string DefaultFstabPath();
+
+status_t RestoreconRecursive(const std::string& path);
 
 status_t SaneReadLinkAt(int dirfd, const char* path, char* buf, size_t bufsiz);
 

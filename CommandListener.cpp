@@ -226,14 +226,15 @@ int CommandListener::VolumeCmd::runCommand(SocketClient *cli,
         return sendGenericOkFail(cli, res);
 
     } else if (cmd == "unmount" && argc > 2) {
-        // unmount [volId]
+        // unmount [volId] [detach]
         std::string id(argv[2]);
         auto vol = vm->findVolume(id);
         if (vol == nullptr) {
             return cli->sendMsg(ResponseCode::CommandSyntaxError, "Unknown volume", false);
         }
+        bool detach = (argc > 3 && !strcmp(argv[3], "detach"));
 
-        return sendGenericOkFail(cli, vol->unmount());
+        return sendGenericOkFail(cli, vol->unmount(detach));
 
     } else if (cmd == "format" && argc > 3) {
         // format [volId] [fsType|auto]
@@ -300,7 +301,7 @@ int CommandListener::StorageCmd::runCommand(SocketClient *cli,
             cli->sendMsg(ResponseCode::CommandSyntaxError, "Usage: mountall", false);
             return 0;
         }
-        fs_mgr_mount_all(fstab);
+        fs_mgr_mount_all(fstab, MOUNT_MODE_DEFAULT);
         cli->sendMsg(ResponseCode::CommandOkay, "Mountall ran successfully", false);
         return 0;
     }
