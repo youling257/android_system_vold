@@ -40,6 +40,28 @@ public:
     Disk(const std::string& eventPath, dev_t device, const std::string& nickname, int flags);
     virtual ~Disk();
 
+    enum {
+        kMajorBlockScsiA = 8,
+        kMajorBlockScsiB = 65,
+        kMajorBlockScsiC = 66,
+        kMajorBlockScsiD = 67,
+        kMajorBlockScsiE = 68,
+        kMajorBlockScsiF = 69,
+        kMajorBlockScsiG = 70,
+        kMajorBlockScsiH = 71,
+        kMajorBlockScsiI = 128,
+        kMajorBlockScsiJ = 129,
+        kMajorBlockScsiK = 130,
+        kMajorBlockScsiL = 131,
+        kMajorBlockScsiM = 132,
+        kMajorBlockScsiN = 133,
+        kMajorBlockScsiO = 134,
+        kMajorBlockScsiP = 135,
+        kMajorBlockMmc = 179,
+        kMajorBlockExperimentalMin = 240,
+        kMajorBlockExperimentalMax = 254,
+    };
+
     enum Flags {
         /* Flag that disk is adoptable */
         kAdoptable = 1 << 0,
@@ -83,6 +105,8 @@ public:
 
     void notifyEvent(int msg);
     void notifyEvent(int msg, const std::string& value);
+
+    static bool isVirtioBlkDevice(unsigned int major);
 
 protected:
     /* ID that uniquely references this disk */
