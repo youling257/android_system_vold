@@ -61,6 +61,8 @@ public:
         kMajorBlockMmc = 179,
         kMajorBlockExperimentalMin = 240,
         kMajorBlockExperimentalMax = 254,
+        kMajorBlockDynamicMin = 234,
+        kMajorBlockDynamicMax = 512,
     };
 
     enum Flags {

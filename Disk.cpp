@@ -91,6 +91,12 @@ bool Disk::isVirtioBlkDevice(unsigned int major) {
             && major <= kMajorBlockExperimentalMax;
 }
 
+static bool isNvmeBlkDevice(unsigned int major, const std::string& sysPath) {
+    return sysPath.find("nvme") != std::string::npos
+            && major >= Disk::kMajorBlockDynamicMin
+            && major <= Disk::kMajorBlockDynamicMax;
+}
+
 Disk::Disk(const std::string& eventPath, dev_t device,
         const std::string& nickname, int flags) :
         mDevice(device), mSize(-1), mNickname(nickname), mFlags(flags), mCreated(
@@ -261,6 +267,16 @@ status_t Disk::readMetadata() {
             LOG(DEBUG) << "Recognized experimental block major ID " << majorId
                     << " as virtio-blk (emulator's virtual SD card device)";
             mLabel = "Virtual";
+            break;
+        }
+        if (isNvmeBlkDevice(majorId, mSysPath)) {
+            std::string path(mSysPath + "/device/model");
+            std::string tmp;
+            if (!ReadFileToString(path, &tmp)) {
+                PLOG(WARNING) << "Failed to read vendor from " << path;
+                return -errno;
+            }
+            mLabel = tmp;
             break;
         }
         LOG(WARNING) << "Unsupported block major type " << majorId;
@@ -610,6 +626,13 @@ int Disk::getMaxMinors() {
             // drivers/block/virtio_blk.c has "#define PART_BITS 4", so max is
             // 2^4 - 1 = 15
             return 15;
+        }
+        if (isNvmeBlkDevice(majorId, mSysPath)) {
+            // despite kernel nvme driver supports up to 1M minors,
+            //     #define NVME_MINORS (1U << MINORBITS)
+            // sgdisk can not support more than 127 partitions, due to
+            //     #define MAX_MBR_PARTS 128
+            return 127;
         }
     }
     }
