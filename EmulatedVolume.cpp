@@ -76,18 +76,20 @@ status_t EmulatedVolume::doMount() {
     mFuseDefault = StringPrintf("/mnt/runtime/default/%s", label.c_str());
     mFuseRead = StringPrintf("/mnt/runtime/read/%s", label.c_str());
     mFuseWrite = StringPrintf("/mnt/runtime/write/%s", label.c_str());
+    mFuseFull = StringPrintf("/mnt/runtime/full/%s", label.c_str());
 
     setInternalPath(mRawPath);
     setPath(StringPrintf("/storage/%s", label.c_str()));
 
     if (fs_prepare_dir(mFuseDefault.c_str(), 0700, AID_ROOT, AID_ROOT) ||
             fs_prepare_dir(mFuseRead.c_str(), 0700, AID_ROOT, AID_ROOT) ||
-            fs_prepare_dir(mFuseWrite.c_str(), 0700, AID_ROOT, AID_ROOT)) {
+            fs_prepare_dir(mFuseWrite.c_str(), 0700, AID_ROOT, AID_ROOT) ||
+            fs_prepare_dir(mFuseFull.c_str(), 0700, AID_ROOT, AID_ROOT)) {
         PLOG(ERROR) << getId() << " failed to create mount points";
         return -errno;
     }
 
-    dev_t before = GetDevice(mFuseWrite);
+    dev_t before = GetDevice(mFuseFull);
 
     if (!(mFusePid = fork())) {
         if (execl(kFusePath, kFusePath,
@@ -112,7 +114,7 @@ status_t EmulatedVolume::doMount() {
         return -errno;
     }
 
-    while (before == GetDevice(mFuseWrite)) {
+    while (before == GetDevice(mFuseFull)) {
         LOG(VERBOSE) << "Waiting for FUSE to spin up...";
         usleep(50000); // 50ms
     }
@@ -129,6 +131,7 @@ status_t EmulatedVolume::doUnmount(bool detach /* = false */) {
     ForceUnmount(mFuseDefault);
     ForceUnmount(mFuseRead);
     ForceUnmount(mFuseWrite);
+    ForceUnmount(mFuseFull);
 
     if (mFusePid > 0) {
         kill(mFusePid, SIGTERM);
@@ -139,10 +142,12 @@ status_t EmulatedVolume::doUnmount(bool detach /* = false */) {
     rmdir(mFuseDefault.c_str());
     rmdir(mFuseRead.c_str());
     rmdir(mFuseWrite.c_str());
+    rmdir(mFuseFull.c_str());
 
     mFuseDefault.clear();
     mFuseRead.clear();
     mFuseWrite.clear();
+    mFuseFull.clear();
 
     return OK;
 }

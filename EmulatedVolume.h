@@ -53,6 +53,7 @@ private:
     std::string mFuseDefault;
     std::string mFuseRead;
     std::string mFuseWrite;
+    std::string mFuseFull;
 
     /* PID of FUSE wrapper */
     pid_t mFusePid;
