@@ -76,7 +76,7 @@ status_t Mount(const std::string& source, const std::string& target, bool ro,
 
     sprintf(mountData,
 #ifdef CONFIG_KERNEL_HAVE_NTFS
-            "utf8,uid=%d,gid=%d,fmask=%o,dmask=%o,nodev,nosuid",
+            "uid=%d,gid=%d,fmask=%o,dmask=%o,nodev,nosuid",
 #else
             "utf8,uid=%d,gid=%d,fmask=%o,dmask=%o,"
             "shortname=mixed,nodev,nosuid,dirsync",
@@ -94,7 +94,7 @@ status_t Mount(const std::string& source, const std::string& target, bool ro,
     cmd.push_back(kMountPath);
 #ifdef CONFIG_KERNEL_HAVE_NTFS
     cmd.push_back("-t");
-    cmd.push_back("ntfs");
+    cmd.push_back("ntfs3");
 #endif
     cmd.push_back("-o");
     cmd.push_back(mountData);
