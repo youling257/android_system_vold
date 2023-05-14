@@ -115,11 +115,6 @@ status_t EmulatedVolume::doMount() {
         return -errno;
     }
 
-    while (before == GetDevice(mFuseFull)) {
-        LOG(VERBOSE) << "Waiting for FUSE to spin up...";
-        usleep(50000); // 50ms
-    }
-
     return OK;
 }
 
