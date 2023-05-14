@@ -423,7 +423,7 @@ int VolumeManager::linkPrimary(userid_t userId) {
     std::string source(mPrimary->getPath());
     if (mPrimary->getType() == android::vold::VolumeBase::Type::kEmulated) {
         source = StringPrintf("%s/%d", source.c_str(), userId);
-        fs_prepare_dir(source.c_str(), 0755, AID_ROOT, AID_ROOT);
+        fs_prepare_dir(source.c_str(), 0777, AID_ROOT, AID_ROOT);
     }
 
     std::string target(StringPrintf("/mnt/user/%d/primary", userId));
@@ -456,7 +456,7 @@ int VolumeManager::onUserStarted(userid_t userId) {
     // before actually starting the user, so we're okay if Zygote
     // already created this directory.
     std::string path(StringPrintf("%s/%d", kUserMountPath, userId));
-    fs_prepare_dir(path.c_str(), 0755, AID_ROOT, AID_ROOT);
+    fs_prepare_dir(path.c_str(), 0777, AID_ROOT, AID_ROOT);
 
     mStartedUsers.insert(userId);
     if (mPrimary) {
@@ -1248,7 +1248,7 @@ int VolumeManager::fixupAsecPermissions(const char *id, gid_t gid, const char* f
             result |= fchown(fd, AID_SYSTEM, privateFile? gid : AID_SYSTEM);
 
             if (ftsent->fts_info & FTS_D) {
-                result |= fchmod(fd, 0755);
+                result |= fchmod(fd, 0777);
             } else if (ftsent->fts_info & FTS_F) {
                 result |= fchmod(fd, privateFile ? 0640 : 0644);
             }
@@ -1264,7 +1264,7 @@ int VolumeManager::fixupAsecPermissions(const char *id, gid_t gid, const char* f
 
         // Finally make the directory readable by everyone.
         int dirfd = open(mountPoint, O_DIRECTORY | O_CLOEXEC);
-        if (dirfd < 0 || fchmod(dirfd, 0755)) {
+        if (dirfd < 0 || fchmod(dirfd, 0777)) {
             SLOGE("Couldn't change owner of existing directory %s: %s", mountPoint, strerror(errno));
             result |= -1;
         }
@@ -1786,7 +1786,7 @@ int VolumeManager::mountObb(const char *img, const char *key, int ownerGid) {
         return -1;
     }
 
-    if (mkdir(mountPoint, 0755)) {
+    if (mkdir(mountPoint, 0777)) {
         if (errno != EEXIST) {
             SLOGE("Mountpoint creation failed (%s)", strerror(errno));
             if (cleanupDm) {
@@ -1880,7 +1880,7 @@ int VolumeManager::mkdirs(char* path) {
     // Only offer to create directories for paths managed by vold
     if (strncmp(path, "/storage/", 9) == 0) {
         // fs_mkdirs() does symlink checking and relative path enforcement
-        return fs_mkdirs(path, 0700);
+        return fs_mkdirs(path, 0777);
     } else {
         SLOGE("Failed to find mounted volume for %s", path);
         return -EINVAL;

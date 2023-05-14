@@ -148,7 +148,7 @@ status_t PublicVolume::doMount() {
         setPath(mRawPath);
     }
 
-    if (fs_prepare_dir(mRawPath.c_str(), 0700, AID_ROOT, AID_ROOT)) {
+    if (fs_prepare_dir(mRawPath.c_str(), 0777, AID_ROOT, AID_ROOT)) {
         PLOG(ERROR) << getId() << " failed to create mount points";
         return -errno;
     }
@@ -211,10 +211,10 @@ status_t PublicVolume::doMount() {
         return OK;
     }
 
-    if (fs_prepare_dir(mFuseDefault.c_str(), 0700, AID_ROOT, AID_ROOT) ||
-            fs_prepare_dir(mFuseRead.c_str(), 0700, AID_ROOT, AID_ROOT) ||
-            fs_prepare_dir(mFuseWrite.c_str(), 0700, AID_ROOT, AID_ROOT) ||
-            fs_prepare_dir(mFuseFull.c_str(), 0700, AID_ROOT, AID_ROOT)) {
+    if (fs_prepare_dir(mFuseDefault.c_str(), 0777, AID_ROOT, AID_ROOT) ||
+            fs_prepare_dir(mFuseRead.c_str(), 0777, AID_ROOT, AID_ROOT) ||
+            fs_prepare_dir(mFuseWrite.c_str(), 0777, AID_ROOT, AID_ROOT) ||
+            fs_prepare_dir(mFuseFull.c_str(), 0777, AID_ROOT, AID_ROOT)) {
         PLOG(ERROR) << getId() << " failed to create FUSE mount points";
         return -errno;
     }
